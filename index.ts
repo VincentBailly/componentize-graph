@@ -22,13 +22,37 @@ function substract<T>(a: Array<T>, b: Array<T>): Array<T> {
 
 const graph = JSON.parse(fs.readFileSync(path.join(process.cwd(), "resolved_graph.json")).toString());
 
+function get_bottoms(tree: Tree): string[] {
+  if (tree.type === "back_reference") {
+    return [tree.node];
+  } else {
+    return tree.children.map(c => get_bottoms(c)).reduce((p,n) => union(p,n), []).sort();
+  }
+}
+
+const memo: Map<string, {bottoms: string[], tree: Tree}[]> = new Map();
 function get_dependency_tree(root: string, graph: Graph, visited: Array<string>): Tree {
+
+  if (!memo.has(root)) {
+    memo.set(root, []);
+  } 
+
+  const memo_result = memo.get(root).filter(o => o.bottoms.every(b => visited.includes(b)))[0];
+  if (memo_result) {
+    return memo_result.tree;
+  }
+
   if (visited.includes(root)) {
     return { node: root, type: "back_reference" };
   }
   const updated_visited = union(visited, [root]);
   const direct_dependencies = graph.links.filter(l => l.source === root).map(l => l.target);
-  return { node: root, children: direct_dependencies.map(d => get_dependency_tree(d, graph, updated_visited)), type: "regular" };
+  const result: Tree = { node: root, children: direct_dependencies.map(d => get_dependency_tree(d, graph, updated_visited)), type: "regular" };
+
+  const bottoms = get_bottoms(result);
+  memo.get(root).push({ bottoms, tree: result });
+
+  return result;
 }
 
 function has_back_reference(name: string, tree: Tree): boolean {
@@ -107,4 +131,4 @@ function assign_nodes_to_cluster(waiting: Array<string>, clusters: Array<Array<s
   return assign_nodes_to_cluster(new_waiting, new_clusters);
 }
 
-console.log(assign_nodes_to_cluster(all_nodes, []));
+console.log(JSON.stringify(assign_nodes_to_cluster(all_nodes, []), undefined, 2));
