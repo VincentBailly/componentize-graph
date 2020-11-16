@@ -22,11 +22,19 @@ function substract<T>(a: Array<T>, b: Array<T>): Array<T> {
 
 const graph = JSON.parse(fs.readFileSync(path.join(process.cwd(), "resolved_graph.json")).toString());
 
+const memo_bottom: Map<Tree, string[]> = new Map();
 function get_bottoms(tree: Tree): string[] {
+  if (memo_bottom.has(tree)) {
+    return memo_bottom.get(tree);
+  }
   if (tree.type === "back_reference") {
-    return [tree.node];
+    const result = [tree.node];
+    memo_bottom.set(tree, result);
+    return result;
   } else {
-    return tree.children.map(c => get_bottoms(c)).reduce((p,n) => union(p,n), []).sort();
+    const result = tree.children.map(c => get_bottoms(c)).reduce((p,n) => union(p,n), []).sort();
+    memo_bottom.set(tree, result);
+    return result;
   }
 }
 
@@ -37,7 +45,7 @@ function get_dependency_tree(root: string, graph: Graph, visited: Array<string>)
     memo.set(root, []);
   } 
 
-  const memo_result = memo.get(root).filter(o => o.bottoms.every(b => visited.includes(b)))[0];
+  const memo_result = memo.get(root).filter(o => o.bottoms.every(b => b === root || visited.includes(b)))[0];
   if (memo_result) {
     return memo_result.tree;
   }
