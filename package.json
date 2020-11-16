@@ -1,5 +1,5 @@
 {
-  "name": "hash-graph",
+  "name": "componentize-graph",
   "version": "1.0.0",
   "main": "index.js",
   "author": "Vincent Bailly <vincent.bailly@microsoft.com>",

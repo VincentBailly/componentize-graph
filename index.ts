@@ -124,7 +124,7 @@ function find_all_nodes_in_cluster(analysed: Array<string>, waiting: Array<strin
   return find_all_nodes_in_cluster(new_analysed, new_waiting);
 }
 
-const all_nodes: Array<string> = graph.nodes.map((o: any) => o.id);
+const all_nodes: Array<string> = graph.nodes;
 
 function assign_nodes_to_cluster(waiting: Array<string>, clusters: Array<Array<string>>): Array<Array<string>> {
   const next = waiting.values().next();
